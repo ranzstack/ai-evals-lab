@@ -4,7 +4,7 @@ Claude updates this file as you go. Feel free to edit it yourself.
 
 | # | Module | Lesson | Quiz | Lab |
 |---|--------|:------:|:----:|:---:|
-| 0 | Orientation | [ ] | — | [ ] setup |
+| 0 | Orientation | [ ] | — | [x] setup |
 | 1 | Why evals | [ ] | [ ] | — |
 | 2 | Anatomy of an eval | [ ] | [ ] | [ ] Lab 1 |
 | 3 | Datasets | [ ] | [ ] | [ ] Lab 2 |
@@ -18,6 +18,7 @@ Claude updates this file as you go. Feel free to edit it yourself.
 ## Lab results log
 
 <!-- e.g. 2026-11-10 | Lab 1 | triage_v1 mock: 8% overall, priority grader weakest -->
+2026-11-08 | Setup | mock smoke test (3 cases, no judge) OK: 33% overall, priority grader failed 2/3 (both off by 1)
 
 ## Playbook artifacts drafted
 
