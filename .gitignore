@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+labs/results/
+labs/data/labels/
+.env

@@ -1,0 +1,9 @@
+[project]
+name = "ai-evals-lab"
+version = "0.1.0"
+description = "Hands-on labs for learning AI evals"
+requires-python = ">=3.11"
+dependencies = ["anthropic"]
+
+[tool.uv]
+package = false
