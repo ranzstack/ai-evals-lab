@@ -1,0 +1,85 @@
+# AI eval gate: offline evals guard the door (curriculum/08-production.md).
+#
+#  - gate      : every PR/push touching the AI system or its eval. Mock model,
+#                free, no secrets. Blocks on guardrail regressions, errors, or a
+#                quality drop that clears the noise (paired CI). ~30s.
+#  - real-eval : MANUAL only (Actions tab -> "Run workflow"). Real Claude API,
+#                capped at 10 cases. Needs the ANTHROPIC_API_KEY repo secret.
+#                Costs money, which is why it never runs automatically.
+name: AI eval gate
+
+on:
+  pull_request:
+    paths:
+      - "labs/prompts/**"
+      - "labs/evalkit/**"
+      - "labs/data/**"
+      - "labs/baselines/**"
+      - "labs/ci_gate.py"
+      - "labs/run_eval.py"
+      - ".github/workflows/ai-eval.yml"
+  push:
+    branches: [main]
+    paths:
+      - "labs/prompts/**"
+      - "labs/evalkit/**"
+      - "labs/data/**"
+      - "labs/baselines/**"
+      - "labs/ci_gate.py"
+      - "labs/run_eval.py"
+      - ".github/workflows/ai-eval.yml"
+  workflow_dispatch:
+    inputs:
+      real_api:
+        description: "Also run a 10-case eval against the real Claude API (costs money)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: labs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      # --no-dev skips Jupyter: CI only needs the harness.
+      - name: Run eval gate (mock)
+        run: uv run --no-dev python ci_gate.py
+      - name: Upload raw results
+        if: always()   # keep the evidence even (especially) when the gate fails
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-mock
+          path: labs/results/ci_mock.jsonl
+
+  real-eval:
+    if: github.event_name == 'workflow_dispatch' && inputs.real_api
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: labs
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Check the API key secret exists
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::Add an ANTHROPIC_API_KEY repository secret first."; exit 1
+          fi
+      # Report-only: no committed real-API baseline yet, so this just records a run.
+      - name: Real-API smoke run (10 cases, code graders only)
+        run: uv run --no-dev python run_eval.py --limit 10 --no-judge
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results-real
+          path: labs/results/*.jsonl

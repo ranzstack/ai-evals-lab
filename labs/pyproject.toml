@@ -7,3 +7,8 @@ dependencies = ["anthropic"]
 
 [tool.uv]
 package = false
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+]
